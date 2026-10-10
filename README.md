@@ -128,3 +128,6 @@ curl -s 'localhost:7070/path?from=1&to=2'
 - Auth, rate limiting, request-size limits.
 - OpenAPI spec, metrics (Micrometer) and health endpoint, Dockerfile, CI pipeline.
 - Duplicate-name policy / richer person profile.
+
+## AI Disclosure
+- Github Copilot
