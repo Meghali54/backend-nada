@@ -29,9 +29,25 @@ social-network/
         └── SocialGraphServiceTest.java       # unit + concurrency tests
 ```
 
-## Run
+## Setup
 
-Requires JDK 17+ and Maven 3.8+.
+Install the following before starting:
+
+- JDK 17 or newer
+- Maven 3.8 or newer
+- `curl` (optional, for the API examples)
+
+Verify that Java and Maven are available:
+
+```bash
+java -version
+mvn -version
+```
+
+From the directory containing `pom.xml`, Maven downloads the project dependencies
+automatically on the first build. No database or other external service is required.
+
+## Run
 
 ```bash
 mvn compile exec:java            # starts on http://localhost:7070
@@ -40,6 +56,22 @@ PORT=8080 mvn compile exec:java  # custom port
 # or build a runnable fat jar
 mvn clean package
 java -jar target/social-network-1.0.0.jar
+```
+
+On Windows PowerShell, set a custom port for the current terminal session with:
+
+```powershell
+$env:PORT = "8080"
+mvn compile exec:java
+```
+
+The server remains attached to the terminal. Stop it with `Ctrl+C`. To confirm that
+the service is running, create a person from another terminal:
+
+```bash
+curl -i -X POST http://localhost:7070/people \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Asha"}'
 ```
 
 ## Test
