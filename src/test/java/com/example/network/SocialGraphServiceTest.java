@@ -25,6 +25,9 @@ import org.junit.jupiter.api.Test;
 /** Fast unit tests for the service layer (no HTTP). */
 class SocialGraphServiceTest {
 
+    private static final int CREATION_THREADS = 16;
+    private static final int PEOPLE_PER_THREAD = 200;
+
     private SocialGraphService service;
 
     @BeforeEach
@@ -48,6 +51,7 @@ class SocialGraphServiceTest {
         assertTrue(withinLimit.isPresent());
         assertEquals(List.of(a, b, c, d), withinLimit.get());
 
+        // The fifth node is four hops away, so it must be excluded by the limit.
         assertTrue(service.shortestPath(a.id(), e.id()).isEmpty());
         // a 3-hop path from the other end is still fine
         assertEquals(List.of(e, d, c, b), service.shortestPath(e.id(), b.id()).orElseThrow());
@@ -72,16 +76,15 @@ class SocialGraphServiceTest {
 
     @Test
     void concurrentCreation_yieldsUniqueSequentialIds() throws Exception {
-        int threads = 16;
-        int perThread = 200;
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        ExecutorService pool = Executors.newFixedThreadPool(CREATION_THREADS);
         CountDownLatch go = new CountDownLatch(1);
         Set<Long> ids = ConcurrentHashMap.newKeySet();
         List<Future<?>> futures = new ArrayList<>();
-        for (int t = 0; t < threads; t++) {
+        for (int t = 0; t < CREATION_THREADS; t++) {
             futures.add(pool.submit(() -> {
+                // Start all workers together to exercise ID generation under contention.
                 go.await();
-                for (int i = 0; i < perThread; i++) {
+                for (int i = 0; i < PEOPLE_PER_THREAD; i++) {
                     ids.add(service.createPerson("p").id());
                 }
                 return null;
@@ -93,8 +96,8 @@ class SocialGraphServiceTest {
         }
         pool.shutdown();
 
-        assertEquals(threads * perThread, ids.size());
+        assertEquals(CREATION_THREADS * PEOPLE_PER_THREAD, ids.size());
         assertTrue(ids.contains(1L));
-        assertTrue(ids.contains((long) threads * perThread));
+        assertTrue(ids.contains((long) CREATION_THREADS * PEOPLE_PER_THREAD));
     }
 }
